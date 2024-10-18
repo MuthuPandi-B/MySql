@@ -1,0 +1,118 @@
+-- Create a database named 'ecommerce'
+CREATE DATABASE ecommerce;
+
+-- Switch to the 'ecommerce' database
+USE ecommerce;
+
+-- Create 'customers' table to store customer details
+CREATE TABLE customers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    address TEXT NOT NULL
+);
+
+-- Create 'orders' table to store order details
+CREATE TABLE orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    order_date DATE NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+-- Create 'products' table to store product details
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    description TEXT
+);
+
+-- Insert some sample customers
+INSERT INTO customers (name, email, address) VALUES
+('John Doe', 'john@example.com', '123 Main St'),
+('Jane Smith', 'jane@example.com', '456 Oak Ave'),
+('Mike Johnson', 'mike@example.com', '789 Pine Rd');
+
+-- Insert some sample products
+INSERT INTO products (name, price, description) VALUES
+('Product A', 20.00, 'Description of Product A'),
+('Product B', 30.00, 'Description of Product B'),
+('Product C', 40.00, 'Description of Product C');
+
+-- Insert some sample orders
+INSERT INTO orders (customer_id, order_date, total_amount) VALUES
+(1, '2024-10-01', 50.00),
+(2, '2024-10-05', 30.00),
+(3, '2024-09-29', 70.00);
+
+-- Get all customers who placed an order in the last 30 days
+SELECT customers.name, customers.email 
+FROM customers
+JOIN orders ON customers.id = orders.customer_id
+WHERE orders.order_date >= CURDATE() - INTERVAL 30 DAY;
+
+-- Get the total order amount per customer
+SELECT customers.name, SUM(orders.total_amount) AS total_spent
+FROM customers
+JOIN orders ON customers.id = orders.customer_id
+GROUP BY customers.id;
+
+-- Update the price of Product C to 45.00
+UPDATE products 
+SET price = 45.00 
+WHERE name = 'Product C';
+
+-- Add a discount column to the products table
+ALTER TABLE products
+ADD discount DECIMAL(5, 2) DEFAULT 0.00;
+
+-- Get the top 3 most expensive products
+SELECT name, price 
+FROM products 
+ORDER BY price DESC 
+LIMIT 3;
+
+-- Create a table for order items to normalize the orders table
+CREATE TABLE order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Insert some sample order_items
+INSERT INTO order_items(order_id,product_id,quantity)
+value
+(1,2,1),
+(2,1,1),
+(1,2,1);
+
+-- Get customers who ordered 'Product A'
+SELECT DISTINCT customers.name
+FROM customers
+JOIN orders ON customers.id = orders.customer_id
+JOIN order_items ON orders.id = order_items.order_id
+JOIN products ON order_items.product_id = products.id
+WHERE products.name = 'Product A';
+
+-- Get customer's name and order date for each order
+SELECT customers.name, orders.order_date
+FROM customers
+JOIN orders ON customers.id = orders.customer_id;
+
+-- Get all orders with a total amount greater than 150.00
+SELECT * 
+FROM orders 
+WHERE total_amount > 150.00;
+
+
+
+-- Get the average total amount of all orders
+SELECT AVG(total_amount) AS average_order_total
+FROM orders;
+
+
